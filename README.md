@@ -1,32 +1,28 @@
-# pokemon-redshift-etl
 # 🧬 Pokemon Combat ETL to Redshift (AWS Glue Project)
 
-This project demonstrates an end-to-end ETL pipeline using **AWS Glue** to load data into **Amazon Redshift Serverless** using private networking.
+Welcome to this end-to-end ETL project where we move and transform Pokémon combat data using **AWS Glue**, and load it into **Amazon Redshift Serverless** — all within a secure, private cloud setup.
 
-## 🔧 Tools & Services
-- AWS Glue (ETL Job)
-- Amazon Redshift Serverless
-- S3 (input/output)
-- IAM + VPC Endpoints + Security Groups
+---
 
-## 🛠️ Architecture
-1. Input data is stored in S3
-2. AWS Glue reads & transforms the data
-3. Transformed data is written to Redshift Serverless via JDBC
-4. Job is triggered manually / scheduled
+## 🔧 What’s Used in This Project
+We built this pipeline using the following AWS services:
 
-## 🗃️ Schema
-See `schema/create_redshift_table.sql`
+- 🛠 **AWS Glue** – for transforming and moving the data
+- 🛢 **Amazon Redshift Serverless** – our cloud data warehouse
+- 📦 **Amazon S3** – for storing input files
+- 🔐 **IAM, VPC, Endpoints, Security Groups** – to keep everything secure and connected
 
-## 📂 Glue Job
-Script: `glue_job/untipokemon_etl.py`
+---
 
-## 🔐 Redshift Connection
-See `config/connection_config.md` for setup details
+## 🧭 How the Pipeline Works
 
-## 📸 Screenshots
-- Glue connection setup
-- Redshift endpoint config
+1. 📥 We start with a CSV file of Pokémon combat stats in an S3 bucket.
+2. 🧹 Glue picks it up, processes the data, and applies any needed transformations.
+3. 🎯 The final, cleaned data is written into a Redshift Serverless table using JDBC.
+4. 🚀 The job can be triggered manually or scheduled as needed.
 
-## 📝 Notes
-- Job tested in private subnet with S3 and Redshift VPC endpoints
+---
+
+
+
+
