@@ -1,0 +1,92 @@
+import sys
+from awsglue.transforms import *
+from awsglue.utils import getResolvedOptions
+from pyspark.context import SparkContext
+from awsglue.context import GlueContext
+from awsglue.job import Job
+from awsglue import DynamicFrame
+
+def sparkSqlQuery(glueContext, query, mapping, transformation_ctx) -> DynamicFrame:
+    for alias, frame in mapping.items():
+        frame.toDF().createOrReplaceTempView(alias)
+    result = spark.sql(query)
+    return DynamicFrame.fromDF(result, glueContext, transformation_ctx)
+args = getResolvedOptions(sys.argv, ['JOB_NAME'])
+sc = SparkContext()
+glueContext = GlueContext(sc)
+spark = glueContext.spark_session
+job = Job(glueContext)
+job.init(args['JOB_NAME'], args)
+
+# Script generated for node Amazon S3
+AmazonS3_node1749230800409 = glueContext.create_dynamic_frame.from_catalog(database="pokemon-database", table_name="pokemon_data_121", transformation_ctx="AmazonS3_node1749230800409")
+
+# Script generated for node Amazon S3
+AmazonS3_node1749230862467 = glueContext.create_dynamic_frame.from_catalog(database="pokemon-database", table_name="combat_data_121", transformation_ctx="AmazonS3_node1749230862467")
+
+# Script generated for node Change Schema
+ChangeSchema_node1749230900617 = ApplyMapping.apply(frame=AmazonS3_node1749230800409, mappings=[("id", "long", "pokemon_id", "long"), ("name", "string", "name", "string"), ("type1", "string", "type1", "string"), ("type2", "string", "type2", "string"), ("hp", "long", "hp", "long"), ("attack", "long", "attack", "long"), ("defense", "long", "defense", "long"), ("spatk", "long", "sp_attack", "long"), ("spdef", "long", "sp_defense", "long"), ("speed", "long", "speed", "long"), ("generation", "long", "generation", "long"), ("lengendary", "boolean", "lengendary", "boolean")], transformation_ctx="ChangeSchema_node1749230900617")
+
+# Script generated for node Change Schema
+ChangeSchema_node1749230881522 = ApplyMapping.apply(frame=AmazonS3_node1749230862467, mappings=[("first_pokemon", "long", "first_pokemon_Id", "long"), ("second_pokemon", "long", "second_pokemon_Id", "long"), ("winner", "long", "winner_pokemon_Id", "long")], transformation_ctx="ChangeSchema_node1749230881522")
+
+# Script generated for node SQL Query
+SqlQuery0 = '''
+SELECT 
+    -- First Pokémon
+    p1.pokemon_id as first_pokemon_id,
+    p1.name AS first_pokemon_name,
+    p1.type1 AS first_type1,
+    p1.type2 AS first_type2,
+    (p1.hp + p1.attack + p1.defense + p1.sp_attack + p1.sp_defense + p1.speed) AS first_total_stats,
+
+    -- Second Pokémon
+    p2.pokemon_id as second_pokemon_id,
+    p2.name AS second_pokemon_name,
+    p2.type1 AS second_type1,
+    p2.type2 AS second_type2,
+    (p2.hp + p2.attack + p2.defense + p2.sp_attack + p2.sp_defense + p2.speed) AS second_total_stats,
+
+    -- Winner
+    pw.pokemon_id as winner_pokemon_id,
+    pw.name AS winner_name,
+
+    -- Who was stronger?
+    CASE 
+        WHEN (p1.hp + p1.attack + p1.defense + p1.sp_attack + p1.sp_defense + p1.speed) > 
+             (p2.hp + p2.attack + p2.defense + p2.sp_attack + p2.sp_defense + p2.speed)
+             THEN 'First'
+        WHEN (p2.hp + p2.attack + p2.defense + p2.sp_attack + p2.sp_defense + p2.speed) > 
+             (p1.hp + p1.attack + p1.defense + p1.sp_attack + p1.sp_defense + p1.speed)
+             THEN 'Second'
+        ELSE 'Equal'
+    END AS stronger_pokemon,
+
+    -- Did stronger Pokémon win?
+    CASE
+        WHEN (p1.hp + p1.attack + p1.defense + p1.sp_attack + p1.sp_defense + p1.speed) >
+             (p2.hp + p2.attack + p2.defense + p2.sp_attack + p2.sp_defense + p2.speed)
+             AND c.winner_pokemon_id = c.first_pokemon_id THEN 'Yes'
+
+        WHEN (p2.hp + p2.attack + p2.defense + p2.sp_attack + p2.sp_defense + p2.speed) >
+             (p1.hp + p1.attack + p1.defense + p1.sp_attack + p1.sp_defense + p1.speed)
+             AND c.winner_pokemon_id = c.second_pokemon_id THEN 'Yes'
+
+        WHEN (p1.hp + p1.attack + p1.defense + p1.sp_attack + p1.sp_defense + p1.speed) =
+             (p2.hp + p2.attack + p2.defense + p2.sp_attack + p2.sp_defense + p2.speed)
+             THEN 'Tie'
+
+        ELSE 'No'
+    END AS stronger_won
+
+FROM combats c
+JOIN pokemon p1 ON c.first_pokemon_id = p1.pokemon_id
+JOIN pokemon p2 ON c.second_pokemon_id = p2.pokemon_id
+JOIN pokemon pw ON c.winner_pokemon_id = pw.pokemon_id;
+'''
+SQLQuery_node1749232800042 = sparkSqlQuery(glueContext, query = SqlQuery0, mapping = {"combats":ChangeSchema_node1749230881522, "pokemon":ChangeSchema_node1749230900617}, transformation_ctx = "SQLQuery_node1749232800042")
+
+# Script generated for node Amazon Redshift
+AmazonRedshift_node1749241411649 = glueContext.write_dynamic_frame.from_options(frame=SQLQuery_node1749232800042, connection_type="redshift", connection_options={"redshiftTmpDir": "s3://aws-glue-assets-025066252505-us-east-1/temporary/", "useConnectionProperties": "true", "dbtable": "public.pokemon_combat", "connectionName": "Redshift Combat Jdbc", "preactions": "CREATE TABLE IF NOT EXISTS public.pokemon_combat (first_pokemon_id VARCHAR, first_pokemon_name VARCHAR, first_type1 VARCHAR, first_type2 VARCHAR, first_total_stats VARCHAR, second_pokemon_id VARCHAR, second_pokemon_name VARCHAR, second_type1 VARCHAR, second_type2 VARCHAR, second_total_stats VARCHAR, winner_pokemon_id VARCHAR, winner_name VARCHAR, stronger_pokemon VARCHAR, stronger_won VARCHAR); TRUNCATE TABLE public.pokemon_combat;"}, transformation_ctx="AmazonRedshift_node1749241411649")
+
+job.commit()
