@@ -1,0 +1,19 @@
+CREATE TABLE public.pokemon_combat (
+    first_pokemon_id BIGINT,
+    first_pokemon_name VARCHAR(100),
+    first_type1 VARCHAR(50),
+    first_type2 VARCHAR(50),
+    first_total_stats BIGINT,
+
+    second_pokemon_id BIGINT,
+    second_pokemon_name VARCHAR(100),
+    second_type1 VARCHAR(50),
+    second_type2 VARCHAR(50),
+    second_total_stats BIGINT,
+
+    winner_pokemon_id BIGINT,
+    winner_name VARCHAR(100),
+
+    stronger_pokemon VARCHAR(10),
+    stronger_won VARCHAR(10)
+);
